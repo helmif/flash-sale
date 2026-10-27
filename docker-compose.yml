@@ -1,0 +1,74 @@
+x-sale-env: &sale-env
+  REDIS_URL: redis://redis:6379
+  MONGO_URL: mongodb://mongo:27017/flash_sale
+  SALE_ID: ${SALE_ID:-launch}
+  SALE_START: ${SALE_START:-}
+  SALE_END: ${SALE_END:-}
+  STOCK: ${STOCK:-}
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    # AOF with fsync every second: survives a Redis restart, losing at most ~1s of writes.
+    command: redis-server --appendonly yes --appendfsync everysec
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 10
+
+  mongo:
+    image: mongo:7.0
+    ports:
+      # Host port 27018, so it never collides with a MongoDB already installed on the machine.
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      <<: *sale-env
+      SERVICE_NAME: flash-sale-api
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    # Stateless: scale with `docker compose up --scale api=3`.
+
+  worker:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    command: ["node", "server/dist/worker.js"]
+    environment:
+      <<: *sale-env
+      SERVICE_NAME: flash-sale-worker
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  redis-data:
+  mongo-data:

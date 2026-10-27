@@ -1,0 +1,6 @@
+# Store text files with LF line endings and check them out as LF on every OS, so a clone on
+# Windows passes the same Prettier checks as one on macOS or Linux.
+* text=auto eol=lf
+
+*.png binary
+*.webp binary

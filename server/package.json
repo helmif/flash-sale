@@ -1,0 +1,38 @@
+{
+    "name": "server",
+    "private": true,
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "dev:worker": "tsx watch src/worker.ts",
+        "build": "tsc -p tsconfig.build.json",
+        "start": "node dist/index.js",
+        "start:worker": "node dist/worker.js",
+        "test": "jest",
+        "format": "prettier --write \"{src,tests}/**/*.ts\"",
+        "stress": "npm run build && tsx tests/stress/flash-sale.stress.ts",
+        "test:all": "jest -c jest.integration.config.js",
+        "stress:docker": "tsx tests/stress/flash-sale.stress.ts --target http://localhost:8080 --connections 200"
+    },
+    "dependencies": {
+        "bullmq": "^6.5.0",
+        "express": "^5.3.0",
+        "ioredis": "^5.4.2",
+        "mongodb": "^6.21.0",
+        "pino": "^10.4.0",
+        "zod": "^4.6.7"
+    },
+    "devDependencies": {
+        "@types/autocannon": "^7.12.6",
+        "@types/express": "^5.0.6",
+        "@types/jest": "^29.5.14",
+        "@types/node": "^22.10.5",
+        "@types/supertest": "^7.2.1",
+        "autocannon": "^8.0.0",
+        "jest": "^29.7.0",
+        "prettier": "^3.2.2",
+        "supertest": "^7.3.1",
+        "ts-jest": "^29.4.15",
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.3"
+    }
+}
